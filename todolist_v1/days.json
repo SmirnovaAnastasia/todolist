@@ -1,0 +1,4 @@
+[{"time": "26.10.2025", "doings": [["Дело1", true, false], ["Дело2", true, false], ["Дело3", true, false]]},
+  {"time": "27.10.2025", "doings": [["Сделать тест", true, false], ["Помыть посуду", true, false], ["Выпить чаю", true, false]]},
+  {"time": "28.10.2025", "doings": [["Б1", true, true], ["Б2", true, true], ["Б3", false, true]]}
+]
