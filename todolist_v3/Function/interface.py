@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import *
+from tkinter.ttk import Checkbutton
 from datetime import datetime
 
 from dns.name import empty
@@ -10,7 +12,8 @@ from Function.database import overwrite_from_all_rows, get_all_tasks
 LARGEFONT = ("Verdana", 15, "bold")
 now = datetime.now().strftime("%Y.%m.%d")
 
-all_tasks = get_all_tasks()
+# all_tasks = get_all_tasks()
+
 
 class StartPage(tk.Frame):
 
@@ -20,7 +23,7 @@ class StartPage(tk.Frame):
 
         self.configure(background='#7fb5b5')
 
-        label = ttk.Label(self, text=f'Здравствуй! Сегодня {str(now[8:]) + str(now[4:8]) + str(now[:4])}. Что вы хотите сделать?', font=LARGEFONT, background='#7fb5b5', foreground='#366161')
+        label = ttk.Label(self, text=f'Здравствуйте! Сегодня {str(now[8:]) + str(now[4:8]) + str(now[:4])}. Что вы хотите сделать?', font=LARGEFONT, background='#7fb5b5', foreground='#366161')
 
         label.grid(row=0, column=0, padx=205, pady=60)
 
@@ -47,6 +50,7 @@ class StartPage(tk.Frame):
                              command=lambda: controller.reset_frame(Archive), style="Large.TButton")
 
         button3.grid(row=6, column=0, padx=30, pady=20)
+
 
 
 
@@ -98,18 +102,20 @@ class DayList(tk.Frame):
 
     def create_table(self):
         # Treeview
-        data_table = ttk.Treeview(self,
+        self.all_tasks_daily = get_all_tasks()
+
+        self.data_table = ttk.Treeview(self,
                                        columns=("col1", "col2", "col3"),
                                        show="headings",
                                        height=5)
 
-        data_table.heading("col1", text="+")
-        data_table.heading("col2", text="Дело")
-        data_table.heading("col3", text="Нужность")
+        self.data_table.heading("col1", text="+")
+        self.data_table.heading("col2", text="Дело")
+        self.data_table.heading("col3", text="Нужность")
 
-        data_table.column("col1", width=30)
-        data_table.column("col2", width=600)
-        data_table.column("col3", width=310)
+        self.data_table.column("col1", width=30)
+        self.data_table.column("col2", width=600)
+        self.data_table.column("col3", width=310)
 
         # Style for treeview
         style = ttk.Style()
@@ -120,16 +126,16 @@ class DayList(tk.Frame):
 
         # Scrollbar
         scrollbar = ttk.Scrollbar(self, orient="vertical",
-                                  command=data_table.yview)
-        data_table.configure(yscrollcommand=scrollbar.set)
+                                  command=self.data_table.yview)
+        self.data_table.configure(yscrollcommand=scrollbar.set)
 
-        data_table.grid(row=1, column=0, padx=10, pady=10)
+        self.data_table.grid(row=1, column=0, padx=10, pady=10)
         scrollbar.grid(row=1, column=4, padx=10, pady=10)
 
 
         here = 1
 
-        for i in all_tasks:
+        for i in  self.all_tasks_daily:
             if str(i[0]) == now:
                 # print('find!')
                 here = 0
@@ -137,15 +143,23 @@ class DayList(tk.Frame):
         if here == 1:
             new_part = (now, [])
 
-            all_tasks.append(new_part)
-            overwrite_from_all_rows(all_tasks)
+            self.all_tasks_daily.append(new_part)
+            overwrite_from_all_rows( self.all_tasks_daily)
 
-
-        for row in all_tasks:
+        self.checkbox_states = {}
+        self.checkbox_all_tasks = []
+        for row in  self.all_tasks_daily:
             if str(row[0]) == now:
+                checkbox_rows = []
+
+                for row1 in row[1]:
+                    checkbox_rows.append(row1[1])
+                    print(f'row: {checkbox_rows}')
+
+                self.checkbox_all_tasks.append(checkbox_rows)
 
                 str_ = ' ' * 90 + row[0][8:] + row[0][4:8] + row[0][:4]
-                data_table.insert("", "end", values=('', str_, ''))
+                self.data_table.insert("", "end", values=('', str_, ''))
                 for row1 in row[1]:
 
                     need = ''
@@ -153,19 +167,88 @@ class DayList(tk.Frame):
                         need = '[Нужно]'
                     else:
                         need = '[Не нужно]'
-                    #
-                    # combo = ttk.Combobox(self)
-                    # combo['values'] = ('[Нужно]', '[Не нужно]')
-                    # combo.current(0)  # установите вариант по умолчанию
-                    # combo.grid(column=0, row=0)
 
+
+
+                    # Создаем изображения для чекбоксов
+                    self.checked_img = tk.PhotoImage(width=16, height=16)
+                    self.unchecked_img = tk.PhotoImage(width=16, height=16)
+
+                    # Простые чекбоксы (можно заменить на реальные изображения)
+                    self.draw_checkbox(self.checked_img, True)
+                    self.draw_checkbox(self.unchecked_img, False)
 
                     if row1[1] is True:
-                        status = '[+]'
+                        status = '[✓]'
                     else:
-                        status = '[-]'
-                    data_table.insert("", "end", values=(status, row1[0], need))
+                        status = '[✗]'
 
+                    image = self.checked_img if row1[1] else self.unchecked_img
+                    self.data_table.insert("", "end",values=(status, row1[0], need))
+                    # # Привязываем обработчик клика
+                    # self.data_table.bind('<Button-1>', self.on_click)
+
+        print(f'all checkbox:{self.checkbox_all_tasks}')
+        self.data_table.bind('<Button-1>', lambda event: self.on_click(event))
+
+
+
+    def draw_checkbox(self, img, checked):
+        # Здесь можно нарисовать чекбокс или загрузить изображения
+        color = 'green' if checked else 'red'
+        img.put(color, (4, 4, 12, 12))
+
+    def on_click(self, event):
+        region = self.data_table.identify_region(event.x, event.y)
+        if region == "cell":
+            column = self.data_table.identify_column(event.x)
+            item = self.data_table.identify_row(event.y)
+
+            num = int(item[2:]) - 2
+
+            # Если клик в колонке чекбокса (первая колонка)
+            # if column == '#1':
+                # if len(self.checkbox_all_tasks[0]) == 1:
+                #     print('here', self.checkbox_all_tasks[0][num])
+                #     if self.checkbox_all_tasks[0][num] is True:
+                #         self.checkbox_all_tasks[0][num] = False
+                #         self.find_row(num, False)
+                #     else:
+                #         self.checkbox_all_tasks[0][num] = True
+                #         self.find_row(num, True)
+                # else:
+            print('here', self.checkbox_all_tasks[0][num])
+            if self.checkbox_all_tasks[0][num] is True:
+                self.checkbox_all_tasks[0][num] = False
+                self.find_row(num, False)
+            else:
+                self.checkbox_all_tasks[0][num] = True
+                self.find_row(num, True)
+
+            print(self.all_tasks_daily)
+            overwrite_from_all_rows(self.all_tasks_daily)
+
+            current_state = self.checkbox_states.get(item, False)
+            new_state = not current_state
+            self.checkbox_states[item] = new_state
+
+            # Обновляем отображение
+            values = list(self.data_table.item(item, 'values'))
+            values[0] = '[✓]' if new_state else '[✗]'
+            self.data_table.item(item, values=values)
+
+            print(f"Item {item}: {'Checked' if new_state else 'Unchecked'}")
+
+    def find_row(self, num, stat):
+        for j in range(len(self.all_tasks_daily)):
+            if str(self.all_tasks_daily[j][0]) == now:
+                for i in range(len(self.all_tasks_daily[j][1])):
+                    if num == i:
+                        if stat is True:
+                            print(self.all_tasks_daily[j][1][i])
+                            self.all_tasks_daily[j][1][i][1] = True
+                        else:
+                            self.all_tasks_daily[j][1][i][1] = False
 
 # third window frame page2
 class NotDone(tk.Frame):
@@ -199,19 +282,22 @@ class NotDone(tk.Frame):
         self.create_table()
 
     def create_table(self):
+        self.all_tasks_not_done = get_all_tasks()
+        print(self.all_tasks_not_done)
+
         # Treeview как атрибут класса для доступа из других методов
-        data_table = ttk.Treeview(self,
+        self.data_table = ttk.Treeview(self,
                                   columns=("col1", "col2", "col3"),
                                   show="headings",
                                   height=5)
 
-        data_table.heading("col1", text="+")
-        data_table.heading("col2", text="Дело")
-        data_table.heading("col3", text="Нужность")
+        self.data_table.heading("col1", text="+")
+        self.data_table.heading("col2", text="Дело")
+        self.data_table.heading("col3", text="Нужность")
 
-        data_table.column("col1", width=30)
-        data_table.column("col2", width=600)
-        data_table.column("col3", width=310)
+        self.data_table.column("col1", width=30)
+        self.data_table.column("col2", width=600)
+        self.data_table.column("col3", width=310)
 
         style = ttk.Style()
         style.configure('Treeview', rowheight=30)
@@ -221,30 +307,75 @@ class NotDone(tk.Frame):
 
         # Добавляем прокрутку
         scrollbar = ttk.Scrollbar(self, orient="vertical",
-                                  command=data_table.yview)
-        data_table.configure(yscrollcommand=scrollbar.set)
+                                  command=self.data_table.yview)
+        self.data_table.configure(yscrollcommand=scrollbar.set)
 
-        data_table.grid(row=1, column=0, padx=10, pady=10)
+        self.data_table.grid(row=1, column=0, padx=10, pady=10)
         scrollbar.grid(row=1, column=4, padx=10, pady=10)
 
+        self.checkbox_states = {}
+        self.checkbox_all_tasks = []
 
-        for row in all_tasks:
+        for row in self.all_tasks_not_done:
+            self.checkbox_rows = []
             str_ = ' ' * 90 + row[0][8:] + row[0][4:8] + row[0][:4]
-            data_table.insert("", "end", values=('', str_, ''))
+            self.data_table.insert("", "end", values=('', str_, ''))
             for row1 in row[1]:
                 if row1[1] is False:
+                    need = ''
                     if row1[2] is True:
                         need = '[Нужно]'
                     else:
                         need = '[Не нужно]'
 
-                    if row1[1] is True:
-                        status = '[+]'
-                    else:
-                        status = '[-]'
-                    data_table.insert("", "end", values=(status, row1[0], need))
+                    # Создаем изображения для чекбоксов
+                    self.checked_img = tk.PhotoImage(width=16, height=16)
+                    self.unchecked_img = tk.PhotoImage(width=16, height=16)
 
-            data_table.insert("", "end", values=('', '', ''))
+                    # Простые чекбоксы (можно заменить на реальные изображения)
+                    self.draw_checkbox(self.checked_img, True)
+                    self.draw_checkbox(self.unchecked_img, False)
+
+                    if row1[1] is True:
+                        status = '[✓]'
+                    else:
+                        status = '[✗]'
+
+                    self.checkbox_rows.append(row1[1])
+                    # print(row1)
+
+                    image = self.checked_img if row1[1] else self.unchecked_img
+                    self.data_table.insert("", "end", values=(status, row1[0], need))
+                    # # Привязываем обработчик клика
+                    self.data_table.bind('<Button-1>', self.on_click)
+
+            self.checkbox_all_tasks.append(self.checkbox_rows)
+            self.data_table.insert("", "end", values=('', '', ''))
+        print(self.checkbox_all_tasks)
+
+    def draw_checkbox(self, img, checked):
+        # Здесь можно нарисовать чекбокс или загрузить изображения
+        color = 'green' if checked else 'red'
+        img.put(color, (4, 4, 12, 12))
+
+    def on_click(self, event):
+        region = self.data_table.identify_region(event.x, event.y)
+        if region == "cell":
+            column = self.data_table.identify_column(event.x)
+            item = self.data_table.identify_row(event.y)
+
+            # Если клик в колонке чекбокса (первая колонка)
+            if column == '#1':
+                current_state = self.checkbox_states.get(item, False)
+                new_state = not current_state
+                self.checkbox_states[item] = new_state
+
+                # Обновляем отображение
+                values = list(self.data_table.item(item, 'values'))
+                values[0] = '[✓]' if new_state else '[✗]'
+                self.data_table.item(item, values=values)
+
+                print(f"Item {item}: {'Checked' if new_state else 'Unchecked'}")
 
 # third window frame page2
 class Archive(tk.Frame):
@@ -279,18 +410,19 @@ class Archive(tk.Frame):
         self.create_table()
 
     def create_table(self):
+        self.all_tasks_arch = get_all_tasks()
         # Treeview как атрибут класса для доступа из других методов
-        data_table = ttk.Treeview(self,
+        self.data_table = ttk.Treeview(self,
                                   columns=("col1", "col2", "col3"),
                                   show="headings",
                                   height=5)
-        data_table.heading("col1", text="+")
-        data_table.heading("col2", text="Дело")
-        data_table.heading("col3", text="Нужность")
+        self.data_table.heading("col1", text="+")
+        self.data_table.heading("col2", text="Дело")
+        self.data_table.heading("col3", text="Нужность")
 
-        data_table.column("col1", width=30)
-        data_table.column("col2", width=600)
-        data_table.column("col3", width=310)
+        self.data_table.column("col1", width=30)
+        self.data_table.column("col2", width=600)
+        self.data_table.column("col3", width=310)
 
         style = ttk.Style()
         style.configure('Treeview', rowheight=30, foreground="#4a8282")
@@ -300,35 +432,84 @@ class Archive(tk.Frame):
 
         # Добавляем прокрутку
         scrollbar = ttk.Scrollbar(self, orient="vertical",
-                                  command=data_table.yview)
-        data_table.configure(yscrollcommand=scrollbar.set)
+                                  command=self.data_table.yview)
+        self.data_table.configure(yscrollcommand=scrollbar.set)
 
-        data_table.grid(row=1, column=0, padx=10, pady=10)
+        self.data_table.grid(row=1, column=0, padx=10, pady=10)
         scrollbar.grid(row=1, column=4, padx=10, pady=10)
 
-        for row in all_tasks:
+        self.checkbox_states = {}
+        checkbox_all_tasks = []
+
+        for row in self.all_tasks_arch:
+            checkbox_rows = []
             if str(row[0]) != now:
                 str_ = ' ' * 90 + row[0][8:] + row[0][4:8] + row[0][:4]
-                data_table.insert("", "end", values=('', str_, ''))
+                self.data_table.insert("", "end", values=('', str_, ''))
                 for row1 in row[1]:
+                    need = ''
                     if row1[2] is True:
                         need = '[Нужно]'
                     else:
                         need = '[Не нужно]'
 
-                    if row1[1] is True:
-                        status = '[+]'
-                    else:
-                        status = '[-]'
-                    data_table.insert("", "end", values=(status, row1[0], need))
+                    # Создаем изображения для чекбоксов
+                    self.checked_img = tk.PhotoImage(width=16, height=16)
+                    self.unchecked_img = tk.PhotoImage(width=16, height=16)
 
-                data_table.insert("", "end", values=('', '', ''))
+                    # Простые чекбоксы (можно заменить на реальные изображения)
+                    self.draw_checkbox(self.checked_img, True)
+                    self.draw_checkbox(self.unchecked_img, False)
+
+                    if row1[1] is True:
+                        status = '[✓]'
+                    else:
+                        status = '[✗]'
+
+                    checkbox_rows.append(row1[1])
+                    # print(row1)
+
+                    image = self.checked_img if row1[1] else self.unchecked_img
+                    self.data_table.insert("", "end", values=(status, row1[0], need))
+                    # # Привязываем обработчик клика
+                    self.data_table.bind('<Button-1>', self.on_click)
+
+
+                self.data_table.insert("", "end", values=('', '', ''))
+                checkbox_all_tasks.append(checkbox_rows)
+        print(checkbox_all_tasks)
+
+    def draw_checkbox(self, img, checked):
+        # Здесь можно нарисовать чекбокс или загрузить изображения
+        color = 'green' if checked else 'red'
+        img.put(color, (4, 4, 12, 12))
+
+    def on_click(self, event):
+        region = self.data_table.identify_region(event.x, event.y)
+        if region == "cell":
+            column = self.data_table.identify_column(event.x)
+            item = self.data_table.identify_row(event.y)
+
+            # Если клик в колонке чекбокса (первая колонка)
+            if column == '#1':
+                current_state = self.checkbox_states.get(item, False)
+                new_state = not current_state
+                self.checkbox_states[item] = new_state
+
+                # Обновляем отображение
+                values = list(self.data_table.item(item, 'values'))
+                values[0] = '[✓]' if new_state else '[✗]'
+                self.data_table.item(item, values=values)
+
+                print(f"Item {item}: {'Checked' if new_state else 'Unchecked'}")
 
 class AddNewDoing(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
         def ClickFunction():
+
+            self.all_tasks_add = get_all_tasks()
             res = "[Добавлена запись '{}']".format(txt.get())
             lbl2.configure(text=res)
 
@@ -337,12 +518,12 @@ class AddNewDoing(tk.Frame):
 
             txt.delete(0, tk.END)
 
-            for i in range(len(all_tasks)):
-                if str(all_tasks[i][0]) == now:
+            for i in range(len(self.all_tasks_add)):
+                if str(self.all_tasks_add[i][0]) == now:
                     new_doing = [str_, False, True]
-                    all_tasks[i][1].append(new_doing)
+                    self.all_tasks_add[i][1].append(new_doing)
 
-            overwrite_from_all_rows(all_tasks)
+            overwrite_from_all_rows(self.all_tasks_add)
 
         self.configure(background='#7fb5b5')
 
