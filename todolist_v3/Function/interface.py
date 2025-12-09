@@ -1,4 +1,5 @@
 import tkinter as tk
+from doctest import master
 from tkinter import ttk
 from tkinter import *
 from tkinter.ttk import Checkbutton
@@ -159,8 +160,6 @@ class DayList(tk.Frame):
                     else:
                         need = '[Не нужно]'
 
-
-
                     # Создаем изображения для чекбоксов
                     self.checked_img = tk.PhotoImage(width=16, height=16)
                     self.unchecked_img = tk.PhotoImage(width=16, height=16)
@@ -194,33 +193,70 @@ class DayList(tk.Frame):
             column = self.data_table.identify_column(event.x)
             item = self.data_table.identify_row(event.y)
 
-            num = int(item[2:]) - 2 # без заголовка и первой даты
+            values_up = list(self.data_table.item(item, 'values'))
+            if values_up[0] != '[✓]' and values_up[0] != '[✗]':
+                print("It's data")
 
-            numx = 0
-            numy = 0
-            for i in range(len(self.all_tasks_daily)):
-                if str(self.all_tasks_daily[i][0]) == now:
-                    for j in range(len(self.all_tasks_daily[i][1])):
-                        if num == j:
-                            numx = i
-                            numy = j
-                            if self.all_tasks_daily[i][1][j][1] is False:
-                                self.all_tasks_daily[i][1][j][1] = True
-                            else:
-                                print(self.all_tasks_daily[i][1][j])
-                                self.all_tasks_daily[i][1][j][1] = False
+            elif column == "#1":
+                item_num = int(item[1:], 16)
+                num = item_num - 2 # без заголовка и первой даты
 
-            # print(self.all_tasks_daily)
-            overwrite_from_all_rows(self.all_tasks_daily)
+                numx = 0
+                numy = 0
+                for i in range(len(self.all_tasks_daily)):
+                    if str(self.all_tasks_daily[i][0]) == now:
+                        for j in range(len(self.all_tasks_daily[i][1])):
+                            if num == j:
+                                numx = i
+                                numy = j
+                                if self.all_tasks_daily[i][1][j][1] is False:
+                                    self.all_tasks_daily[i][1][j][1] = True
+                                else:
+                                    print(self.all_tasks_daily[i][1][j])
+                                    self.all_tasks_daily[i][1][j][1] = False
 
-            new_state = self.all_tasks_daily[numx][1][numy][1]
+                # print(self.all_tasks_daily)
+                overwrite_from_all_rows(self.all_tasks_daily)
 
-            # Обновляем отображение
-            values = list(self.data_table.item(item, 'values'))
-            values[0] = '[✓]' if new_state else '[✗]'
-            self.data_table.item(item, values=values)
+                new_state = self.all_tasks_daily[numx][1][numy][1]
 
-            print(f"Item {item}: {'Checked' if new_state else 'Unchecked'}")
+                # Обновляем отображение
+                values = list(self.data_table.item(item, 'values'))
+                values[0] = '[✓]' if new_state else '[✗]'
+                self.data_table.item(item, values=values)
+
+                print(f"Item {item}: {'Checked' if new_state else 'Unchecked'}")
+
+            elif column == "#3":
+                item_num = int(item[1:], 16)
+                num = item_num - 2  # без заголовка и первой даты
+
+                numx = 0
+                numy = 0
+                for i in range(len(self.all_tasks_daily)):
+                    if str(self.all_tasks_daily[i][0]) == now:
+                        for j in range(len(self.all_tasks_daily[i][1])):
+                            if num == j:
+                                numx = i
+                                numy = j
+                                if self.all_tasks_daily[i][1][j][2] is False:
+                                    self.all_tasks_daily[i][1][j][2] = True
+                                else:
+                                    print(self.all_tasks_daily[i][1][j])
+                                    self.all_tasks_daily[i][1][j][2] = False
+
+                # print(self.all_tasks_daily)
+                overwrite_from_all_rows(self.all_tasks_daily)
+
+                new_state = self.all_tasks_daily[numx][1][numy][2]
+
+                # Обновляем отображение
+                values = list(self.data_table.item(item, 'values'))
+                values[2] = '[Нужно]' if new_state else '[Не нужно]'
+                self.data_table.item(item, values=values)
+
+                print(f"Item {item}: {'Checked' if new_state else 'Unchecked'}")
+
 
 
 # third window frame page2
@@ -311,6 +347,7 @@ class NotDone(tk.Frame):
                         status = '[✓]'
                     else:
                         status = '[✗]'
+                    
 
                     image = self.checked_img if row1[1] else self.unchecked_img
                     self.data_table.insert("", "end", values=(status, row1[0], need))
@@ -328,33 +365,83 @@ class NotDone(tk.Frame):
             column = self.data_table.identify_column(event.x)
             item = self.data_table.identify_row(event.y)
 
-            num = int(item[2:]) - 2
+            values_up = list(self.data_table.item(item, 'values'))
+            if values_up[0] != '[✓]' and values_up[0] != '[✗]':
+                print("It's data")
 
-            ch = 0
-            numx= 0
-            numy = 0
-            all_done = False
-            for i in range(len(self.all_tasks_not_done)):
-                if all_done is True:
-                    break
-                for j in range(len(self.all_tasks_not_done[i][1])):
-                    if self.all_tasks_not_done[i][1][j][1] is False:
-                        if num == ch:
-                            print(self.all_tasks_not_done[i][1][j])
-                            self.all_tasks_not_done[i][1][j][1] = True
+            elif column == "#1":
+                item_num = int(item[1:], 16)
+                num = item_num - 1
 
-                            numx = i
-                            numy = j
+                ch = 0
+                numx= 0
+                numy = 0
+                all_done = False
+                for i in range(len(self.all_tasks_not_done)):
+                    if all_done is True:
+                        break
+                    ch += 1
+                    for j in range(len(self.all_tasks_not_done[i][1])):
+                        # print(self.all_tasks_not_done[i][1][j])
+                        if self.all_tasks_not_done[i][1][j][1] is False:
+                            print(f"I'm here: {self.all_tasks_not_done[i][1][j]}")
+                            if num == ch:
+                                print(f'ch {ch}: {self.all_tasks_not_done[i][1][j]}')
+                                self.all_tasks_not_done[i][1][j][1] = True
 
-                            all_done = True
-                            break
-                        ch = ch + 1
-                num -= 1
+                                numx = i
+                                numy = j
 
-            print(self.all_tasks_not_done)
-            overwrite_from_all_rows(self.all_tasks_not_done)
+                                all_done = True
+                                break
+                            ch = ch + 1
 
-            self.data_table.delete(item)
+                print(self.all_tasks_not_done)
+                overwrite_from_all_rows(self.all_tasks_not_done)
+
+                self.data_table.delete(item)
+
+                # num_columns = len(self.data_table.item(item, 'values'))
+                # empty_values = [''] * num_columns  # Создаем список пустых строк для всех колонок
+                # self.data_table.item(item, values=empty_values)
+
+            elif column == "#3":
+                item_num = int(item[1:], 16)
+                num = item_num - 2
+
+                ch = 0
+                numx = 0
+                numy = 0
+                all_done = False
+                for i in range(len(self.all_tasks_not_done)):
+                    if all_done is True:
+                        break
+                    for j in range(len(self.all_tasks_not_done[i][1])):
+                        if self.all_tasks_not_done[i][1][j][1] is False:
+                            if num == ch:
+                                print(self.all_tasks_not_done[i][1][j])
+                                self.all_tasks_not_done[i][1][j][2] = True
+
+                                numx = i
+                                numy = j
+
+                                all_done = True
+                                break
+                            ch = ch + 1
+                    num -= 1
+
+                print(self.all_tasks_not_done)
+                overwrite_from_all_rows(self.all_tasks_not_done)
+
+                new_state = self.all_tasks_not_done[numx][1][numy][2]
+
+                # Обновляем отображение
+                values = list(self.data_table.item(item, 'values'))
+                values[2] = '[Нужно]' if new_state else '[Не нужно]'
+                self.data_table.item(item, values=values)
+
+                print(f"Item {item}: {'Checked' if new_state else 'Unchecked'}")
+
 
 # third window frame page2
 class Archive(tk.Frame):
@@ -458,51 +545,104 @@ class Archive(tk.Frame):
         if region == "cell":
             column = self.data_table.identify_column(event.x)
             item = self.data_table.identify_row(event.y)
-            num = int(item[2:]) - 2
 
-            value1 = ''
-            if item:  # Проверяем, что строка найдена
-                # Способ 1 - через item()
-                values = self.data_table.item(item)['values']
-                if values and len(values) > 1:
-                    value1 = values[1]  # Второй столбец
+            values_up = list(self.data_table.item(item, 'values'))
+            if values_up[0] != '[✓]' and values_up[0] != '[✗]':
+                print("It's data")
 
-            ch = 0
-            numx = 0
-            numy = 0
-            all_done = False
-            for i in range(len(self.all_tasks_arch)):
-                if all_done is True:
-                    break
-                for j in range(len(self.all_tasks_arch[i][1])):
-                    if num == ch:
-                        print(self.all_tasks_arch[i][1][j])
-                        if self.all_tasks_arch[i][1][j][1] is False:
-                            self.all_tasks_arch[i][1][j][1] = True
-                        else:
-                            self.all_tasks_arch[i][1][j][1] = False
+            elif column == "#1":
+                item_num = int(item[1:], 16)
+                num = item_num - 2
 
-                        print(self.all_tasks_arch[i][1][j])
+                value1 = ''
+                if item:  # Проверяем, что строка найдена
+                    # Способ 1 - через item()
+                    values = self.data_table.item(item)['values']
+                    if values and len(values) > 1:
+                        value1 = values[1]  # Второй столбец
 
-
-                        numx = i
-                        numy = j
-
-                        all_done = True
+                ch = 0
+                numx = 0
+                numy = 0
+                all_done = False
+                for i in range(len(self.all_tasks_arch)):
+                    if all_done is True:
                         break
-                    ch = ch + 1
-                num -= 1
+                    for j in range(len(self.all_tasks_arch[i][1])):
+                        if num == ch:
+                            print(self.all_tasks_arch[i][1][j])
+                            if self.all_tasks_arch[i][1][j][1] is False:
+                                self.all_tasks_arch[i][1][j][1] = True
+                            else:
+                                self.all_tasks_arch[i][1][j][1] = False
 
-            overwrite_from_all_rows(self.all_tasks_arch)
+                            print(self.all_tasks_arch[i][1][j])
 
-            new_state = self.all_tasks_arch[numx][1][numy][1]
 
-            # Обновляем отображение
-            values = list(self.data_table.item(item, 'values'))
-            values[0] = '[✓]' if new_state else '[✗]'
-            self.data_table.item(item, values=values)
+                            numx = i
+                            numy = j
 
-            print(f"Item {item}: {'Checked' if new_state else 'Unchecked'}")
+                            all_done = True
+                            break
+                        ch = ch + 1
+                    num -= 1
+
+                overwrite_from_all_rows(self.all_tasks_arch)
+                new_state = self.all_tasks_arch[numx][1][numy][1]
+
+                # Обновляем отображение
+                values = list(self.data_table.item(item, 'values'))
+                values[0] = '[✓]' if new_state else '[✗]'
+                self.data_table.item(item, values=values)
+
+                print(f"Item {item}: {'Checked' if new_state else 'Unchecked'}")
+
+            elif column == "#3":
+                item_num = int(item[1:], 16)
+                num = item_num - 2
+
+                value1 = ''
+                if item:  # Проверяем, что строка найдена
+                    # Способ 1 - через item()
+                    values = self.data_table.item(item)['values']
+                    if values and len(values) > 1:
+                        value1 = values[1]  # Второй столбец
+
+                ch = 0
+                numx = 0
+                numy = 0
+                all_done = False
+                for i in range(len(self.all_tasks_arch)):
+                    if all_done is True:
+                        break
+                    for j in range(len(self.all_tasks_arch[i][1])):
+                        if num == ch:
+                            print(self.all_tasks_arch[i][1][j])
+                            if self.all_tasks_arch[i][1][j][2] is False:
+                                self.all_tasks_arch[i][1][j][2] = True
+                            else:
+                                self.all_tasks_arch[i][1][j][2] = False
+
+                            print(self.all_tasks_arch[i][1][j])
+
+                            numx = i
+                            numy = j
+
+                            all_done = True
+                            break
+                        ch = ch + 1
+                    num -= 1
+
+                overwrite_from_all_rows(self.all_tasks_arch)
+
+                new_state = self.all_tasks_arch[numx][1][numy][2]
+
+                # Обновляем отображение
+                values = list(self.data_table.item(item, 'values'))
+                values[2] = '[Нужно]' if new_state else '[Не нужно]'
+                self.data_table.item(item, values=values)
+
+                print(f"Item {item}: {'Checked' if new_state else 'Unchecked'}")
 
 
 class AddNewDoing(tk.Frame):
