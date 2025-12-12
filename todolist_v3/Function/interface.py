@@ -292,6 +292,7 @@ class NotDone(tk.Frame):
 
     def create_table(self):
         self.all_tasks_not_done = get_all_tasks()
+
         # print(self.all_tasks_not_done)
 
         # Treeview как атрибут класса для доступа из других методов
@@ -322,14 +323,20 @@ class NotDone(tk.Frame):
         self.data_table.grid(row=1, column=0, padx=10, pady=10)
         scrollbar.grid(row=1, column=4, padx=10, pady=10)
 
-
+        self.delete_or_not = []
         for row in self.all_tasks_not_done:
-
-            str_ = ' ' * 90 + row[0][8:] + row[0][4:8] + row[0][:4]
-            self.data_table.insert("", "end", values=('', str_, ''))
+            delete_row = []
+            date_need = 0 # for print date one time
             for row1 in row[1]:
+                delete_row.append(False)
                 if row1[1] is False:
-                    need = ''
+
+                    # print date
+                    if date_need == 0:
+                        date_ = ' ' * 90 + row[0][8:] + row[0][4:8] + row[0][:4]
+                        self.data_table.insert("", "end", values=('', date_, ''))
+                        date_need += 1
+
                     if row1[2] is True:
                         need = '[Нужно]'
                     else:
@@ -347,11 +354,10 @@ class NotDone(tk.Frame):
                         status = '[✓]'
                     else:
                         status = '[✗]'
-                    
 
                     image = self.checked_img if row1[1] else self.unchecked_img
                     self.data_table.insert("", "end", values=(status, row1[0], need))
-
+            self.delete_or_not.append(delete_row)
         self.data_table.bind('<Button-1>', lambda event: self.on_click(event))
 
     def draw_checkbox(self, img, checked):
@@ -368,38 +374,74 @@ class NotDone(tk.Frame):
             values_up = list(self.data_table.item(item, 'values'))
             if values_up[0] != '[✓]' and values_up[0] != '[✗]':
                 print("It's data")
+                print(item)
 
             elif column == "#1":
                 item_num = int(item[1:], 16)
-                num = item_num - 1
+                num = item_num
 
                 ch = 0
                 numx= 0
                 numy = 0
+
                 all_done = False
                 for i in range(len(self.all_tasks_not_done)):
+                    isdata = 0
                     if all_done is True:
                         break
-                    ch += 1
                     for j in range(len(self.all_tasks_not_done[i][1])):
                         # print(self.all_tasks_not_done[i][1][j])
+                        if self.delete_or_not[i][j] is True:
+                            num -= 1
+                            print(f"We skip: {self.all_tasks_not_done[i][1][j]}")
+                            continue
+
                         if self.all_tasks_not_done[i][1][j][1] is False:
+                            ch = ch + 1
+                            if isdata == 0:
+                                ch += 1
+                                isdata = 1
+
                             print(f"I'm here: {self.all_tasks_not_done[i][1][j]}")
                             if num == ch:
+
                                 print(f'ch {ch}: {self.all_tasks_not_done[i][1][j]}')
                                 self.all_tasks_not_done[i][1][j][1] = True
 
                                 numx = i
                                 numy = j
+                                self.delete_or_not[i][j] = True
 
                                 all_done = True
                                 break
-                            ch = ch + 1
+
 
                 print(self.all_tasks_not_done)
+
                 overwrite_from_all_rows(self.all_tasks_not_done)
 
-                self.data_table.delete(item)
+                it_was_last = False
+                i = numx
+                for j in range(len(self.all_tasks_not_done[i][1])):
+                    if self.all_tasks_not_done[i][1][j][1] is False:
+                        print(f'One more {self.all_tasks_not_done[i][1][j]}')
+                        it_was_last = True
+
+                if it_was_last is True:
+                    self.data_table.delete(item)
+                    print('Delete only one str')
+                else:
+                    self.data_table.delete(item)
+
+                    # new_event = event.y - 32
+                    item = self.data_table.identify_row(event.y - 32)
+                    # values = list(self.data_table.item(item, 'values'))
+                    self.data_table.delete(item)
+                    print('Delete DATA and one str')
+
+                    # self.data_table.delete(item)
+                # del self.all_tasks_not_done[numx][1][numy]
+                # print(self.all_tasks_not_done)
 
                 # num_columns = len(self.data_table.item(item, 'values'))
                 # empty_values = [''] * num_columns  # Создаем список пустых строк для всех колонок
@@ -407,28 +449,43 @@ class NotDone(tk.Frame):
 
             elif column == "#3":
                 item_num = int(item[1:], 16)
-                num = item_num - 2
+                num = item_num
 
                 ch = 0
                 numx = 0
                 numy = 0
+
                 all_done = False
                 for i in range(len(self.all_tasks_not_done)):
+                    isdata = 0
                     if all_done is True:
                         break
                     for j in range(len(self.all_tasks_not_done[i][1])):
+                        # print(self.all_tasks_not_done[i][1][j])
+                        if self.delete_or_not[i][j] is True:
+                            num -= 1
+                            print(f"We skip: {self.all_tasks_not_done[i][1][j]}")
+                            continue
+
                         if self.all_tasks_not_done[i][1][j][1] is False:
+                            ch = ch + 1
+                            if isdata == 0:
+                                ch += 1
+                                isdata = 1
+
+                            print(f"I'm here: {self.all_tasks_not_done[i][1][j]}")
                             if num == ch:
-                                print(self.all_tasks_not_done[i][1][j])
-                                self.all_tasks_not_done[i][1][j][2] = True
+                                print(f'ch {ch}: {self.all_tasks_not_done[i][1][j]}')
+                                if self.all_tasks_not_done[i][1][j][2] is False:
+                                    self.all_tasks_not_done[i][1][j][2] = True
+                                else:
+                                    self.all_tasks_not_done[i][1][j][2] = False
 
                                 numx = i
                                 numy = j
 
                                 all_done = True
                                 break
-                            ch = ch + 1
-                    num -= 1
 
                 print(self.all_tasks_not_done)
                 overwrite_from_all_rows(self.all_tasks_not_done)

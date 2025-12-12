@@ -17,7 +17,7 @@
 
 ![version12.png](/images/version12.PNG)
 
-<ins>Версия 3</ins> - добавлена графика, с помощью библиотеки Tkinter. [На данный момент версия имеет неполный функционал]
+<ins>Версия 3</ins> - добавлена графика, с помощью библиотеки Tkinter.
 
 ![version3main.png](/images/version3main.PNG)
 
